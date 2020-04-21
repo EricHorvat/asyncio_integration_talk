@@ -8,6 +8,7 @@ from aiohttp import web
 from server.logger import get_logger, setup_logging
 from server.socket_server.server import start_socket_server
 from server.utils import json_payload
+from server.websockets.handler import websocket_handler
 
 setup_logging()
 logger = get_logger()
@@ -49,6 +50,12 @@ def get_messages(request):
     return dict(messages=messages_list)
 
 
+async def shutdown(app):
+    for ws in app['websockets'].values():
+        await ws.close()
+    app['websockets'].clear()
+
+
 if __name__ == '__main__':
     templates_folder = Path(__file__).parent / 'templates'
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(templates_folder))
@@ -57,7 +64,10 @@ if __name__ == '__main__':
         web.get('/reset', reset),
         web.get('/messages', get_messages),
         web.post('/messages', add_messages),
+        web.get('/ws', websocket_handler)
     ])
+    app['websockets'] = {}
+    app.on_shutdown.append(shutdown)
 
     start_socket_server()
     web.run_app(app)

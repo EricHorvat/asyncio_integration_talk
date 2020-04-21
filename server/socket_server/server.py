@@ -1,14 +1,12 @@
 import asyncio
 import json
-from typing import Dict
 from asyncio import StreamReader, StreamWriter, Queue
 
+from server.data_structures import run_queues
 from server.logger import get_logger
 from server.socket_server.message_processor import process_message, disconnected_agent
 
 logger = get_logger()
-
-run_queues: Dict[str,Queue] = {}
 
 
 async def read_data(reader: StreamReader):
@@ -29,7 +27,7 @@ async def handle_read(reader: StreamReader, addr: tuple):
     while message:
         logger.info("Received %r from %r" % (message, addr))
         try:
-            process_message(message, addr)
+            await process_message(message, addr)
             await run_queues[f"{addr}"].put(message)
         except (ValueError, KeyError) as e:
             logger.debug("Error parsing socket data", exc_info=e)
@@ -44,7 +42,7 @@ async def handle(reader: StreamReader, writer: StreamWriter):
     await asyncio.gather(handle_read(reader=reader, addr=addr),
                          handle_write(writer=writer, queue=queue, addr=addr))
 
-    disconnected_agent(addr)
+    await disconnected_agent(addr)
     logger.info("Close the client socket")
     writer.close()
 
