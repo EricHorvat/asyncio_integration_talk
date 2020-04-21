@@ -11,7 +11,7 @@ async def socket_client(message, loop):
 
     data = await reader.readline()
     print('Received: %r' % data.decode())
-    await asyncio.sleep(i/100)
+    await asyncio.sleep(5)
 
     print('Close the socket')
     writer.close()
