@@ -5,8 +5,12 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
+from flask_server.logger import get_logger, setup_logging
+from flask_server.socket_server.server import start_socket_server
 from flask_server.utils import json_payload
 
+setup_logging()
+logger = get_logger()
 
 routes = web.RouteTableDef()
 
@@ -35,7 +39,7 @@ async def add_messages(request):
 
     messages_list.extend([data] * random.randint(1,3))
 
-    print(messages_list)
+    logger.info(messages_list)
 
     return "OK"
 
@@ -43,20 +47,6 @@ async def add_messages(request):
 @aiohttp_jinja2.template('messages.html')
 def get_messages(request):
     return dict(messages=messages_list)
-
-
-async def sleep():
-    for i in range(0, 30):
-        await asyncio.sleep(1)
-        print(f"Waited {i}s")
-
-
-def start_sleep_server():
-    loop = asyncio.get_event_loop()
-    coro = sleep()
-    task = loop.create_task(coro)
-
-    return task
 
 
 if __name__ == '__main__':
@@ -69,6 +59,6 @@ if __name__ == '__main__':
         web.post('/messages', add_messages),
     ])
 
-    start_sleep_server()
+    start_socket_server()
     web.run_app(app)
 
