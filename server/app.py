@@ -1,10 +1,12 @@
 import asyncio
+import json
 from pathlib import Path
 
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
+from server.data_structures import agents
 from server.logger import get_logger, setup_logging
 from server.socket_server.server import start_socket_server
 from server.utils import json_payload
@@ -30,7 +32,6 @@ async def reset(request):
     return dict(messages=['Cleaned'])
 
 
-@routes.post('/messages')
 async def add_messages(request):
 
     raw_data = await request.read()  # Raises 400 if malformed data is passed
@@ -43,6 +44,25 @@ async def add_messages(request):
     logger.info(messages_list)
 
     return "OK"
+
+
+async def run_agent(request):
+
+    raw_data = await request.read()  # Raises 400 if malformed data is passed
+    data = json_payload(raw_data)
+    logger.info(f"Running {data}")
+
+    if "name" not in data or "code_executor" not in data or "args" not in data:
+        return web.Response(status=400)
+
+    data["args"] = json.loads(data['args'])
+
+    for agent in agents:
+        if agent.name == data["name"]:
+            await agent.queue.put(dict(action="RUN", code_executor=data['code_executor'], args=data['args']))
+            return web.Response()
+
+    return web.Response(status=400)
 
 
 @aiohttp_jinja2.template('messages.html')
@@ -64,7 +84,8 @@ if __name__ == '__main__':
         web.get('/reset', reset),
         web.get('/messages', get_messages),
         web.post('/messages', add_messages),
-        web.get('/ws', websocket_handler)
+        web.get('/ws', websocket_handler),
+        web.post('/run', run_agent),
     ])
     app['websockets'] = {}
     app.on_shutdown.append(shutdown)

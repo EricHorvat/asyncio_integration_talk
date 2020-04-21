@@ -1,3 +1,4 @@
+from asyncio import Queue
 from typing import List, Dict
 
 
@@ -21,10 +22,11 @@ class CodeExecutor:
 
 class Agent:
 
-    def __init__(self, name: str, executors: List[CodeExecutor], addr: tuple):
+    def __init__(self, name: str, executors: List[CodeExecutor], addr: tuple, queue: Queue):
         self.name: str = name
         self.executors: List[CodeExecutor] = executors
         self.addr = addr
+        self.queue = queue
 
     def __str__(self):
         return f"Agent[name:{self.name}, addr{self.addr}, exec:{self.executors}]"

@@ -6,5 +6,5 @@ def json_payload(raw_payload: bytearray):
     payload = raw_payload.decode(encoding='UTF-8')
     try:
         return json.loads(payload)
-    except ValueError:
+    except ValueError as e:
         raise JsonValidaitonError('Payload is not json serialisable')

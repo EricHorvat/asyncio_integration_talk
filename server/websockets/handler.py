@@ -19,7 +19,7 @@ async def websocket_handler(request):
 
     await ws_current.prepare(request)
 
-    await ws_current.send_json({'action': 'connect', 'agents': []})
+    await ws_current.send_json({'action': 'connect', 'agents': [a.__str__() for a in agents]})
 
     while True:
         msg = await update_websocket_queue.get()
@@ -28,6 +28,8 @@ async def websocket_handler(request):
             await ws_current.send_json({'action': 'update', 'agents': [a.__str__() for a in agents]})
         else:
             break
+
+    await ws_current.send_json({'action': 'disconnect', 'agents': []})
 
     logger.info('ws disconnected.')
 

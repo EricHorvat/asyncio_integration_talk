@@ -2,7 +2,7 @@ import asyncio
 import json
 from asyncio import StreamReader, StreamWriter, Queue
 
-from server.data_structures import run_queues
+from server.data_structures import agents
 from server.logger import get_logger
 from server.socket_server.message_processor import process_message, disconnected_agent
 
@@ -22,13 +22,12 @@ async def handle_write(writer: StreamWriter, queue: Queue, addr: tuple):
     await writer.drain()
 
 
-async def handle_read(reader: StreamReader, addr: tuple):
+async def handle_read(reader: StreamReader, queue: Queue, addr: tuple):
     message = await read_data(reader)
     while message:
         logger.info("Received %r from %r" % (message, addr))
         try:
-            await process_message(message, addr)
-            await run_queues[f"{addr}"].put(message)
+            await process_message(message, queue, addr)
         except (ValueError, KeyError) as e:
             logger.debug("Error parsing socket data", exc_info=e)
         message = await read_data(reader)
@@ -37,9 +36,8 @@ async def handle_read(reader: StreamReader, addr: tuple):
 async def handle(reader: StreamReader, writer: StreamWriter):
     addr = writer.get_extra_info('peername')
     queue = Queue()
-    run_queues[f"{addr}"] = queue
 
-    await asyncio.gather(handle_read(reader=reader, addr=addr),
+    await asyncio.gather(handle_read(reader=reader, queue=queue, addr=addr),
                          handle_write(writer=writer, queue=queue, addr=addr))
 
     await disconnected_agent(addr)
