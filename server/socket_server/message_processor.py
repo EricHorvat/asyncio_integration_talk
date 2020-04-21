@@ -1,5 +1,5 @@
-from flask_server.logger import get_logger
-from flask_server.models import Agent, CodeExecutor
+from server.logger import get_logger
+from server.models import Agent, CodeExecutor
 
 logger = get_logger()
 

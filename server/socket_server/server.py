@@ -3,8 +3,8 @@ import json
 from typing import Dict
 from asyncio import StreamReader, StreamWriter, Queue
 
-from flask_server.logger import get_logger
-from flask_server.socket_server.message_processor import process_message, disconnected_agent
+from server.logger import get_logger
+from server.socket_server.message_processor import process_message, disconnected_agent
 
 logger = get_logger()
 

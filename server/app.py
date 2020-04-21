@@ -5,9 +5,9 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
-from flask_server.logger import get_logger, setup_logging
-from flask_server.socket_server.server import start_socket_server
-from flask_server.utils import json_payload
+from server.logger import get_logger, setup_logging
+from server.socket_server.server import start_socket_server
+from server.utils import json_payload
 
 setup_logging()
 logger = get_logger()
