@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <title>Messages</title>
+</head>
+
+<body>
+
+<button id="add" onclick="buttonAdd()" style="padding-right: 5px">Add</button>
+<button id="update" onclick="buttonUpdate()" style="padding-right: 5px;padding-left: 5px">Update</button>
+<button id="reset" onclick="buttonReset()" style="padding-left: 5px">Reset</button>
+
+<div id="place_for_messages"></div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script id="button_actions">
+function buttonAdd(){
+    $.ajax({
+        url: "/messages",
+        type: "post",
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({"msg": "ANDA"}),
+    });
+}
+
+function buttonUpdate(){
+    $.ajax({
+        url: "/messages",
+        type: "get",
+        success: function(response) {
+            $("#place_for_messages").html(response);
+        },
+        error: function(xhr) {
+            //Do Something to handle error
+        }
+    });
+}
+
+function buttonReset(){
+
+    $.ajax({
+      url: "/reset",
+      type: "get",
+      data: {},
+      success: function(response) {
+        $("#place_for_messages").html(response);
+      },
+      error: function(xhr) {
+        //Do Something to handle error
+      }
+    });
+}
+</script>
+
+</body>
+
+</html>
