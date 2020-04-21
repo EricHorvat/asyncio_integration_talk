@@ -3,7 +3,7 @@ import json
 from asyncio import StreamReader, StreamWriter
 
 from flask_server.logger import get_logger
-from flask_server.socket_server.message_processor import process_message
+from flask_server.socket_server.message_processor import process_message, disconnected_agent
 
 logger = get_logger()
 
@@ -22,14 +22,18 @@ async def handle(reader: StreamReader, writer: StreamWriter):
         data = json.dumps(message)
         logger.info("Received %r from %r" % (message, addr))
 
-        process_message(message)
+        try:
+            process_message(message, addr)
 
-        logger.info("Send: %r" % message)
-        writer.write(f"{data}\n".encode())
-        await writer.drain()
+            logger.info("Send: %r" % message)
+            writer.write(f"{data}\n".encode())
+            await writer.drain()
+        except (ValueError, KeyError) as e:
+            logger.debug("Error parsing socket data", exc_info=e)
 
         message = await read_data(reader)
 
+    disconnected_agent(addr)
     logger.info("Close the client socket")
     writer.close()
 
