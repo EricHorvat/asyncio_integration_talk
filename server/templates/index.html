@@ -6,26 +6,34 @@
     <title>Messages</title>
 </head>
 
-<body>
+<body onload="connect()">
+<div style="display: flex">
 
-<input type="text" id="name"/><br>
-<input type="text" id="code_executor"/><br>
-<input type="text" id="args"/><br>
-<button id="run" onclick="buttonRun()" style="padding-right: 5px">Run</button>
-<br/>
-<button id="add" onclick="buttonAdd()" style="padding-right: 5px">Add</button>
-<button id="update" onclick="buttonUpdate()" style="padding-right: 5px;padding-left: 5px">Update</button>
-<button id="reset" onclick="buttonReset()" style="padding-left: 5px">Reset</button>
-<br/>
-<div class="row">
-    <div id="place_for_agents" class="column">
-        <button id="connect">Connect</button>&nbsp;|&nbsp;Status:
-        <span id="status">disconnected</span>
-        <div id="place_agents"></div>
+    <div style="flex: 50%">
+        <h4>Messages</h4>
+        <button id="add" onclick="buttonAdd()" style="padding-right: 5px">Add</button>
+        <button id="reset" onclick="buttonReset()" style="padding-left: 5px">Reset</button><br/>
+        <div id="place_for_messages"></div>
+
     </div>
+    <div  style="flex: 50%">
+        <h4>Agents</h4>
+        <div style="display: flex">
+            <div>
+                <label for="name">Agent Name</label><br>
+                <label for="code_executor">Code Executor</label><br>
+                <label for="args">Args</label><br>
+            </div>
+            <div style="flex: 20%">
+                <input type="text" id="name"/><br>
+                <input type="text" id="code_executor"/><br>
+                <input type="text" id="args"/><br>
+            </div>
+        </div>
+        <button id="run" onclick="buttonRun()" style="padding-right: 5px">Run</button><br/>
+        <div id="place_agents"></div>
 
-    <div id="place_for_messages" class="column"></div>
-
+    </div>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -41,7 +49,7 @@
         });
     }
 
-    function buttonUpdate(){
+    function updateMessages(){
         $.ajax({
             url: "/messages",
             type: "get",
@@ -58,10 +66,9 @@
 
         $.ajax({
             url: "/reset",
-            type: "get",
+            type: "post",
             data: {},
             success: function(response) {
-                $("#place_for_messages").html(response);
             },
             error: function(xhr) {
                 //Do Something to handle error
@@ -91,46 +98,46 @@
     }
 </script>
 <script language="javascript" type="text/javascript">
+    let conn = null;
     $(
-        function() {
-            var conn = null;
-            var name = "UNKNOWN";
+        function connect() {
+            disconnect();
+            var wsUri = (window.location.protocol == 'https:' && 'wss://' || 'ws://') + window.location.host + '/ws';
+            conn = new WebSocket(wsUri);
+            conn.onopen = function () {
+                console.log('Connected.');
+                update_agents_ui([]);
+            };
+            conn.onmessage = function (e) {
+                let data = JSON.parse(e.data);
+                switch (data.action) {
+                    case  'connect':
+                        agents = data.agents;
+                        console.log('Connected with ' + agents);
+                        update_agents_ui(agents);
+                        break;
+                    case  'disconnect':
+                        agents = data.agents;
+                        console.log('Disconnected');
+                        update_agents_ui([]);
+                        break;
+                    case 'update':
+                        agents = data.agents;
+                        console.log(agents)
+                        console.log('Joined ' + agents);
+                        update_agents_ui(agents);
+                        break;
+                    case 'update_msg':
+                        updateMessages();
+                        break;
+                }
+            };
+            conn.onclose = function () {
+                console.log('Disconnected.');
+                conn = null;
+                update_agents_ui([]);
+            };
 
-            function connect() {
-                disconnect();
-                var wsUri = (window.location.protocol == 'https:' && 'wss://' || 'ws://') + window.location.host + '/ws';
-                conn = new WebSocket(wsUri);
-                conn.onopen = function () {
-                    console.log('Connected.');
-                    update_agents_ui([]);
-                };
-                conn.onmessage = function (e) {
-                    let data = JSON.parse(e.data);
-                    switch (data.action) {
-                        case  'connect':
-                            agents = data.agents;
-                            console.log('Connected with ' + agents);
-                            update_agents_ui(agents);
-                            break;
-                        case  'disconnect':
-                            agents = data.agents;
-                            console.log('Disconnected');
-                            update_agents_ui([]);
-                            break;
-                        case 'update':
-                            agents = data.agents;
-                            console.log(agents)
-                            console.log('Joined ' + agents);
-                            update_agents_ui(agents);
-                            break;
-                    }
-                };
-                conn.onclose = function () {
-                    console.log('Disconnected.');
-                    conn = null;
-                    update_agents_ui([]);
-                };
-            }
 
             function disconnect() {
                 if (conn != null) {
@@ -142,28 +149,16 @@
 
             function update_agents_ui(agents) {
                 if (conn == null) {
-                    $('#status').text('disconnected');
-                    $('#connect').html('Connect');
+                    console.log("Disconnected")
                 } else {
-                    $('#status').text('connected (' + conn.protocol + ')');
-                    $('#connect').html('Disconnect');
+                    console.log("Connected")
                     place_agents_html = ''
                     for (let i = 0; i < agents.length; i++) {
-                        place_agents_html += '<text>'+agents[i]+'</text><br/>'
+                        place_agents_html += '<text>'+JSON.stringify(agents[i], null, 2);+'</text><br/>'
                     }
                     $('#place_agents').html(place_agents_html)
                 }
             }
-
-            $('#connect').on('click', function () {
-                if (conn == null) {
-                    connect();
-                } else {
-                    disconnect();
-                }
-                update_agents_ui([]);
-                return false;
-            });
         }
     );
 </script>

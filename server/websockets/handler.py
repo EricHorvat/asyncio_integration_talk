@@ -19,13 +19,15 @@ async def websocket_handler(request):
 
     await ws_current.prepare(request)
 
-    await ws_current.send_json({'action': 'connect', 'agents': [a.__str__() for a in agents]})
+    await ws_current.send_json({'action': 'connect', 'agents': [a.__dict__() for a in agents]})
 
     while True:
         msg = await update_websocket_queue.get()
 
-        if msg:
-            await ws_current.send_json({'action': 'update', 'agents': [a.__str__() for a in agents]})
+        if msg == "agent":
+            await ws_current.send_json({'action': 'update', 'agents': [a.__dict__() for a in agents]})
+        elif msg == "msg":
+            await ws_current.send_json({'action': 'update_msg'})
         else:
             break
 

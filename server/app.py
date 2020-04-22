@@ -6,7 +6,7 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
-from server.data_structures import agents
+from server.data_structures import agents, update_websocket_queue
 from server.logger import get_logger, setup_logging
 from server.socket_server.server import start_socket_server
 from server.utils import json_payload
@@ -26,10 +26,10 @@ async def index(request):
     return {}
 
 
-@aiohttp_jinja2.template('messages.html')
 async def reset(request):
     messages_list.clear()
-    return dict(messages=['Cleaned'])
+    await update_websocket_queue.put("msg")
+    return web.Response(status=201)
 
 
 async def add_messages(request):
@@ -40,6 +40,7 @@ async def add_messages(request):
     messages_list.append(data)
 
     logger.info(messages_list)
+    await update_websocket_queue.put("msg")
 
     return web.Response(status=201)
 
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(templates_folder))
     app.add_routes([
         web.get('/', index),
-        web.get('/reset', reset),
+        web.post('/reset', reset),
         web.get('/messages', get_messages),
         web.post('/messages', add_messages),
         web.get('/ws', websocket_handler),
