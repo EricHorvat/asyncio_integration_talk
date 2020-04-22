@@ -70,7 +70,7 @@ class Dispatcher:
                                   for executor in self.executors.values()]
                 }
 
-        self.reader, self.writer = await asyncio.open_connection('127.0.0.1', 8888, loop=loop)
+        self.reader, self.writer = await asyncio.open_connection(self.host, 8888, loop=loop)
         self.write(connected_data)
         logger.info("Connection to server succeeded")
 
