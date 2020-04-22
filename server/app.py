@@ -37,13 +37,11 @@ async def add_messages(request):
     raw_data = await request.read()  # Raises 400 if malformed data is passed
     data = json_payload(raw_data)
 
-    import random
-
-    messages_list.extend([data] * random.randint(1,3))
+    messages_list.append(data)
 
     logger.info(messages_list)
 
-    return "OK"
+    return web.Response(status=201)
 
 
 async def run_agent(request):

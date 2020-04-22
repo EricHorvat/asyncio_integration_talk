@@ -16,10 +16,12 @@ async def read_data(reader: StreamReader):
 
 async def handle_write(writer: StreamWriter, queue: Queue, addr: tuple):
     message = await queue.get()
-    logger.info("Send: %r" % message)
-    data = json.dumps(message)
-    writer.write(f"{data}\n".encode())
-    await writer.drain()
+    while message is not None:
+        logger.info("Send: %r" % message)
+        data = json.dumps(message)
+        writer.write(f"{data}\n".encode())
+        await writer.drain()
+        message = await queue.get()
 
 
 async def handle_read(reader: StreamReader, queue: Queue, addr: tuple):
@@ -31,6 +33,7 @@ async def handle_read(reader: StreamReader, queue: Queue, addr: tuple):
         except (ValueError, KeyError) as e:
             logger.debug("Error parsing socket data", exc_info=e)
         message = await read_data(reader)
+    await queue.put(None)
 
 
 async def handle(reader: StreamReader, writer: StreamWriter):
