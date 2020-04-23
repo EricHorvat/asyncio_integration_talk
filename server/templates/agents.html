@@ -1,0 +1,16 @@
+<label>
+    {% for agent in agents %}
+        <div>
+            <text style="color: {{ agent.color }}">
+                {{ agent.name }}({{ agent.addr[0] }}:{{ agent.addr[1] }})
+            </text><br/>
+
+            {% for executor in agent.executors.values() %}
+                <text style="color: {{ executor.color }};margin-left: 1.5em">
+                {{ executor.name }}, args ({{ executor.args }})
+                </text><br/>
+            {% endfor %}
+
+        </div><br/>
+    {% endfor %}
+</label>

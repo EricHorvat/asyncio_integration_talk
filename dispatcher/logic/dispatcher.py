@@ -109,9 +109,9 @@ class Dispatcher:
                 self.write(
                     {
                         "action": "RUN_STATUS",
-                        "executor_name": data['executor'],
+                        "executor_name": data["code_executor"],
                         "running": False,
-                        "message": f"The selected executor {data['executor']} not exists in {self.agent_name} "
+                        "message": f"The selected executor {data['code_executor']} not exists in {self.agent_name} "
                                    f"agent"
                     }
                 )

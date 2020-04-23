@@ -56,7 +56,7 @@ async def run_agent(request):
 
     data["args"] = json.loads(data['args'])
 
-    for agent in agents:
+    for agent in agents.values():
         if agent.name == data["name"]:
             await agent.queue.put(dict(action="RUN", code_executor=data['code_executor'], args=data['args']))
             return web.Response()
@@ -67,6 +67,11 @@ async def run_agent(request):
 @aiohttp_jinja2.template('messages.html')
 def get_messages(request):
     return dict(messages=messages_list)
+
+
+@aiohttp_jinja2.template('agents.html')
+def get_agents(request):
+    return dict(agents=agents.values())
 
 
 async def shutdown(app):
@@ -85,6 +90,7 @@ if __name__ == '__main__':
         web.post('/messages', add_messages),
         web.get('/ws', websocket_handler),
         web.post('/run', run_agent),
+        web.get('/agents', get_agents),
     ])
     app['websockets'] = {}
     app.on_shutdown.append(shutdown)

@@ -6,7 +6,6 @@ from aiohttp import web
 
 from server.data_structures import update_websocket_queue
 from server.logger import get_logger
-from server.socket_server.message_processor import agents
 
 logger = get_logger()
 
@@ -19,13 +18,13 @@ async def websocket_handler(request):
 
     await ws_current.prepare(request)
 
-    await ws_current.send_json({'action': 'connect', 'agents': [a.__dict__() for a in agents]})
+    await ws_current.send_json({'action': 'connect'})
 
     while True:
         msg = await update_websocket_queue.get()
 
         if msg == "agent":
-            await ws_current.send_json({'action': 'update', 'agents': [a.__dict__() for a in agents]})
+            await ws_current.send_json({'action': 'update'})
         elif msg == "msg":
             await ws_current.send_json({'action': 'update_msg'})
         else:

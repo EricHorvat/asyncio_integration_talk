@@ -151,12 +151,16 @@
                 if (conn == null) {
                     console.log("Disconnected")
                 } else {
-                    console.log("Connected")
-                    place_agents_html = ''
-                    for (let i = 0; i < agents.length; i++) {
-                        place_agents_html += '<text style="color: chocolate">'+JSON.stringify(agents[i], null, 2);+'</text><br/>'
-                    }
-                    $('#place_agents').html(place_agents_html)
+                    $.ajax({
+                        url: "/agents",
+                        type: "get",
+                        success: function(response) {
+                            $("#place_agents").html(response);
+                        },
+                        error: function(xhr) {
+                            //Do Something to handle error
+                        }
+                    });
                 }
             }
         }

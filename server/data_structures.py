@@ -1,8 +1,8 @@
-from typing import List,Dict
+from typing import Dict
 from server.models import Agent
 
 from asyncio import Queue
 
-agents: List[Agent] = []
+agents: Dict[tuple, Agent] = {}
 update_websocket_queue: Queue = Queue()
 
