@@ -1,5 +1,9 @@
 <label id="value_lable">
     {% for message in messages %}
-        {{ message }}<br>
+        <text style="color: {{ message.color }}">{{ message.msg }}
+        {% if message.by %}
+            By {{ message.by }}
+        {% endif %}
+        </text><br>
     {% endfor %}
 </label>

@@ -1,1 +1,1 @@
-echo '{"msg":"Soy bash"}'
+echo '{"msg":"Soy bash", "color":"darkred}'

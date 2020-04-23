@@ -1,2 +1,2 @@
 import json
-print(json.dumps(dict(msg="Soy python")))
+print(json.dumps(dict(msg="Soy python", color="gold")))

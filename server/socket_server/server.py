@@ -2,7 +2,6 @@ import asyncio
 import json
 from asyncio import StreamReader, StreamWriter, Queue
 
-from server.data_structures import agents
 from server.logger import get_logger
 from server.socket_server.message_processor import process_message, disconnected_agent
 
@@ -17,7 +16,7 @@ async def read_data(reader: StreamReader):
 async def handle_write(writer: StreamWriter, queue: Queue, addr: tuple):
     message = await queue.get()
     while message is not None:
-        logger.info("Send: %r" % message)
+        logger.info(f"Send to {addr}: {message}")
         data = json.dumps(message)
         writer.write(f"{data}\n".encode())
         await writer.drain()

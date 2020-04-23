@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main(void) {
-  printf("{\"msg\":\"Soy C\"}\n");
+  printf("{\"msg\":\"Soy C\", \"color\":\"darkgreen\"}\n");
   return 0;
 }

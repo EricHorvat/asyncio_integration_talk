@@ -75,7 +75,6 @@ class StdOutLineProcessor(FileLineProcessor):
         return f"http://{host}:{port}/messages"
 
     async def processing(self, line):
-        from aiohttp.client_exceptions import ServerDisconnectedError
         try:
             loaded_json = json.loads(line)
             print(f"{Colors.OKBLUE}{line}{Colors.ENDC}")

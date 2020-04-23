@@ -45,7 +45,7 @@
             type: "post",
             dataType: 'json',
             contentType: 'application/json',
-            data: JSON.stringify({"msg": "web"}),
+            data: JSON.stringify({"msg": "web", "color": "blue"}),
         });
     }
 
@@ -154,7 +154,7 @@
                     console.log("Connected")
                     place_agents_html = ''
                     for (let i = 0; i < agents.length; i++) {
-                        place_agents_html += '<text>'+JSON.stringify(agents[i], null, 2);+'</text><br/>'
+                        place_agents_html += '<text style="color: chocolate">'+JSON.stringify(agents[i], null, 2);+'</text><br/>'
                     }
                     $('#place_agents').html(place_agents_html)
                 }
