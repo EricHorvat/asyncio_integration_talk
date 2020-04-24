@@ -28,12 +28,12 @@ logger = logging.get_logger()
 class FileLineProcessor:
 
     @staticmethod
-    async def _process_lines(line_getter, process_f, logger_f, name):
+    async def _process_lines(line_getter, process_line_f, logger_f, name):
         while True:
             try:
                 line = await line_getter()
                 if line != "":
-                    await process_f(line)
+                    await process_line_f(line)
                     logger_f(line)
                 else:
                     break

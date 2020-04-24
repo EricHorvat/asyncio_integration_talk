@@ -99,72 +99,68 @@
 </script>
 <script language="javascript" type="text/javascript">
     let conn = null;
-    $(
-        function connect() {
-            disconnect();
-            var wsUri = (window.location.protocol == 'https:' && 'wss://' || 'ws://') + window.location.host + '/ws';
-            conn = new WebSocket(wsUri);
-            conn.onopen = function () {
-                console.log('Connected.');
-                update_agents_ui([]);
-            };
-            conn.onmessage = function (e) {
-                let data = JSON.parse(e.data);
-                switch (data.action) {
-                    case  'connect':
-                        agents = data.agents;
-                        console.log('Connected with ' + agents);
-                        update_agents_ui(agents);
-                        break;
-                    case  'disconnect':
-                        agents = data.agents;
-                        console.log('Disconnected');
-                        update_agents_ui([]);
-                        break;
-                    case 'update':
-                        agents = data.agents;
-                        console.log(agents)
-                        console.log('Joined ' + agents);
-                        update_agents_ui(agents);
-                        break;
-                    case 'update_msg':
-                        updateMessages();
-                        break;
-                }
-            };
-            conn.onclose = function () {
-                console.log('Disconnected.');
-                conn = null;
-                update_agents_ui([]);
-            };
-
-
-            function disconnect() {
-                if (conn != null) {
-                    conn.close();
-                    conn = null;
-                    update_agents_ui([]);
-                }
+    function connect() {
+        disconnect();
+        var wsUri = (window.location.protocol == 'https:' && 'wss://' || 'ws://') + window.location.host + '/ws';
+        conn = new WebSocket(wsUri);
+        conn.onopen = function () {
+            console.log('Connected.');
+            update_agents_ui();
+        };
+        conn.onmessage = function (e) {
+            let data = JSON.parse(e.data);
+            switch (data.action) {
+                case  'connect':
+                    console.log('Connected');
+                    updateMessages();
+                    update_agents_ui();
+                    break;
+                case  'disconnect':
+                    console.log('Disconnected');
+                    update_agents_ui();
+                    break;
+                case 'update':
+                    console.log('Update agents');
+                    update_agents_ui();
+                    break;
+                case 'update_msg':
+                    console.log('Update messages');
+                    updateMessages();
+                    break;
             }
+        };
+        conn.onclose = function () {
+            console.log('Disconnected.');
+            conn = null;
+            update_agents_ui();
+        };
 
-            function update_agents_ui(agents) {
-                if (conn == null) {
-                    console.log("Disconnected")
-                } else {
-                    $.ajax({
-                        url: "/agents",
-                        type: "get",
-                        success: function(response) {
-                            $("#place_agents").html(response);
-                        },
-                        error: function(xhr) {
-                            //Do Something to handle error
-                        }
-                    });
-                }
+
+        function disconnect() {
+            if (conn != null) {
+                conn.close();
+                conn = null;
+                update_agents_ui();
             }
         }
-    );
+
+        function update_agents_ui() {
+            if (conn == null) {
+                console.log("Disconnected")
+            } else {
+                $.ajax({
+                    url: "/agents",
+                    type: "get",
+                    success: function(response) {
+                        $("#place_agents").html(response);
+                    },
+                    error: function(xhr) {
+                        //Do Something to handle error
+                    }
+                });
+            }
+        }
+    }
 </script>
 
 </body>

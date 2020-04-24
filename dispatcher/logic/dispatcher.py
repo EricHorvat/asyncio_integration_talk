@@ -81,16 +81,16 @@ class Dispatcher:
             data = await self.read()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data: dict = None):
+    def control_data(self, data):
         if "action" not in data:
             logger.info("Data not contains action to do")
             self.write({"error": "'action' key is mandatory in this websocket connection"})
-            return
+            return False
 
         if data["action"] not in ["RUN"]:  # ONLY SUPPORTED COMMAND FOR NOW
             logger.info("Unrecognized action")
             self.write({f"{data['action']}_RESPONSE": "Error: Unrecognized action"})
-            return
+            return False
 
         if data["action"] == "RUN":
             if "code_executor" not in data:
@@ -102,7 +102,7 @@ class Dispatcher:
                         "message": f"No executor selected to {self.agent_name} agent"
                     }
                 )
-                return
+                return False
 
             if data["code_executor"] not in self.executors:
                 logger.error("The selected executor not exists")
@@ -115,10 +115,9 @@ class Dispatcher:
                                    f"agent"
                     }
                 )
-                return
+                return False
 
             executor = self.executors[data["code_executor"]]
-
             config_params = list(executor.params.keys()).copy()
             passed_params = data['args'] if 'args' in data else {}
 
@@ -162,47 +161,55 @@ class Dispatcher:
                     }
                 )
 
-            if mandatory_full and all_accepted:
-                running_msg = f"Running {executor.name} executor from {self.agent_name} agent"
-                logger.info("Running {} executor".format(executor.name))
+            return all_accepted and mandatory_full
 
-                process = await self.create_process(executor, passed_params)
-                tasks = [
-                    StdOutLineProcessor(process, self.session).process_f(),
-                    StdErrLineProcessor(process).process_f(),
-                ]
+    async def run_once(self, data: dict = None):
+
+        if self.control_data(data):
+
+            executor = self.executors[data["code_executor"]]
+            passed_params = data['args'] if 'args' in data else {}
+
+            running_msg = f"Running {executor.name} executor from {self.agent_name} agent"
+            logger.info("Running {} executor".format(executor.name))
+
+            process = await self.create_process(executor, passed_params)
+            tasks = [
+                StdOutLineProcessor(process, self.session).process_f(),
+                StdErrLineProcessor(process).process_f(),
+            ]
+            self.write(
+                {
+                    "action": "RUN_STATUS",
+                    "executor_name": executor.name,
+                    "running": True,
+                    "message": running_msg
+                }
+            )
+            await asyncio.gather(*tasks)
+            await process.communicate()
+            assert process.returncode is not None
+            if process.returncode == 0:
+                logger.info("Executor {} finished successfully".format(executor.name))
                 self.write(
                     {
                         "action": "RUN_STATUS",
                         "executor_name": executor.name,
-                        "running": True,
-                        "message": running_msg
+                        "successful": True,
+                        "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
                     }
                 )
-                await asyncio.gather(*tasks)
-                await process.communicate()
-                assert process.returncode is not None
-                if process.returncode == 0:
-                    logger.info("Executor {} finished successfully".format(executor.name))
-                    self.write(
-                        {
-                            "action": "RUN_STATUS",
-                            "executor_name": executor.name,
-                            "successful": True,
-                            "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
-                        }
-                    )
-                else:
-                    logger.warning(
-                        f"Executor {executor.name} finished with exit code {process.returncode}")
-                    self.write(
-                        {
-                            "action": "RUN_STATUS",
-                            "executor_name": executor.name,
-                            "successful": False,
-                            "message": f"Executor {executor.name} from {self.agent_name} failed"
-                        }
-                    )
+            else:
+                logger.warning(
+                    f"Executor {executor.name} finished with exit code {process.returncode}")
+                self.write(
+                    {
+                        "action": "RUN_STATUS",
+                        "executor_name": executor.name,
+                        "successful": False,
+                        "message": f"Executor {executor.name} from {self.agent_name} failed"
+                    }
+                )
 
     @staticmethod
     async def create_process(executor: Executor, args):
